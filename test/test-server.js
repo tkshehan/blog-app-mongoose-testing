@@ -53,26 +53,43 @@ describe('BlogPost API Resource', function() {
   });
 
   describe('GET /posts endpoint', function() {
-
+    it('should return all existing posts');
+    it('should return posts with the correct fields');
   });
 
   describe('GET posts/:id endpoint', function() {
-
+    it('should return one post by id');
+    it('should return the post matching the id given');
   });
 
   describe('POST /posts endpoint', function() {
-
+    it('should add a new post');
   });
 
   describe('DELETE /posts/:id endpoint', function() {
-
+    it('should delete a post by id');
   });
 
   describe('PUT /posts/:id endpoint', function() {
-
+    it('should update the fields of a post by id');
   });
 
   describe('DELETE /:id endpoint', function() {
+    it('should delete a post by id', function() {
+      let post;
 
+      return BlogPost.findOne()
+        .then(function(_post) {
+          post = _post;
+          return chai.request(app).delete(`/posts/${post.id}`);
+        })
+        .then(function(res) {
+          expect(res).to.have.status(204);
+          return BlogPost.findById(post.id);
+        })
+        .then(function(_post) {
+          expect(_post).to.be.null;
+        })
+    });
   });
 });
