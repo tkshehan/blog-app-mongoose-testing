@@ -97,11 +97,73 @@ describe('BlogPost API Resource', function() {
   });
 
   describe('GET posts/:id endpoint', function() {
-    it('should return the post matching the id given');
+    it('should return the post matching the id given', function() {
+      let post;
+      return BlogPost.findOne()
+        .then(function(_post) {
+          post = _post
+        })
+        .then(function() {
+          return chai.request(app)
+            .get(`/posts/${post.id}`)
+        })
+        .then(function(res) {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+
+          expect(res.body.id).to.equal(post.id);
+          expect(res.body.author).to.equal(post.authorName);
+          expect(res.body.title).to.equal(post.title);
+          expect(res.body.content).to.equal(post.content);
+        });
+    });
   });
 
   describe('POST /posts endpoint', function() {
-    it('should add a new post');
+    it('should add a new post', function() {
+      let newPost = generateBlogPostData();
+      let count;
+      BlogPost.count()
+        .then(function(_count) {
+          count = _count;
+        })
+        .then(function() {
+          return chai.request(app)
+            .post(`/posts`)
+            .send(newPost)
+        })
+        .then(function(res) {
+          // Check response Body against newPost
+          expect(res).to.have.status(201);
+          expect(res).to.be.json;
+          expect(res.body).to.bo.an(Object);
+          expect(res.body).to.include.keys(
+            'id', 'author', 'content', 'title', 'created'
+          );
+          expect(res.body.author).to.equal(
+            `${newPost.author.firstName} ${newPost.author.lastName}`
+          );
+          expect(res.body.content).to.equal(newPost.content);
+          expect(res.body.title).to.equal(newPost.title);
+          expect(res.body.id).to.not.be.null;
+          expect(res.body.created).to.be.a(Date);
+
+          return BlogPost.findById(res.body.id);
+        })
+        .then(function(post) {
+          // Check post in database against newPost
+          expect(post.author).to.equal(newPost.author);
+          expect(post.content).to.equal(newPost.content);
+          expect(post.title).to.equal(newPost.title);
+          expect(post.id).to.equal(newPost.id);
+          expect(post.created).to.equal(post.created);
+
+          return BlogPost.count();
+        })
+        .then(function(_count) {
+          expect(_count).to.equal(count + 1);
+        });
+    });
   });
 
   describe('DELETE /posts/:id endpoint', function() {
@@ -124,7 +186,9 @@ describe('BlogPost API Resource', function() {
   });
 
   describe('PUT /posts/:id endpoint', function() {
-    it('should update the fields of a post by id');
+    it('should update the fields of a post by id', function() {
+
+    });
   });
 
   describe('DELETE /:id endpoint', function() {
