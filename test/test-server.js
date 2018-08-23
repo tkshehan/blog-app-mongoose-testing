@@ -187,7 +187,32 @@ describe('BlogPost API Resource', function() {
 
   describe('PUT /posts/:id endpoint', function() {
     it('should update the fields of a post by id', function() {
+      const updateData = {
+        title: 'Yes Yes Thank You',
+        content: 'That is true. Thank you for noticing',
+      }
+      let originalPost;
 
+      return BlogPost.findOne()
+        .then(function(post) {
+          updateData.id = post.id;
+          originalPost = post;
+
+          return chai.request(app)
+            .put(`/posts/${post.id}`)
+            .send(updateData);
+        })
+        .then(function(res) {
+          expect(res).to.have.status(204);
+          return BlogPost.findById(updateData.id);
+        })
+        .then(function(post) {
+          expect(post.title).to.equal(updateData.title);
+          expect(post.content).to.equal(updateData.content);
+
+          expect(post.author).to.deep.equal(originalPost.author);
+          expect(post.created).to.deep.equal(originalPost.created);
+        });
     });
   });
 
