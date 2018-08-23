@@ -1,0 +1,1 @@
+Endpoint: https://blog-app-mongoose-testing.herokuapp.com/posts
