@@ -53,12 +53,50 @@ describe('BlogPost API Resource', function() {
   });
 
   describe('GET /posts endpoint', function() {
-    it('should return all existing posts');
-    it('should return posts with the correct fields');
+    it('should return all existing posts', function() {
+      let res;
+      return chai.request(app)
+        .get('/posts')
+        .then(function(_res) {
+          res = _res;
+          expect(res).to.have.status(200);
+          expect(res.body).to.have.a.lengthOf.at.least(1);
+          return BlogPost.count();
+        })
+        .then(function(count) {
+          expect(res.body).to.have.a.lengthOf(count);
+        })
+    });
+
+    it('should return posts with the correct fields', function() {
+      let resPost;
+      return chai.request(app)
+        .get('/posts')
+        .then(function(res) {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.an('array');
+          expect(res.body).to.have.a.lengthOf.at.least(1);
+
+          res.body.forEach(function(post) {
+            expect(post).to.be.an('object');
+            expect(post).to.include.keys(
+              'id', 'author', 'content', 'title', 'created'
+            );
+          });
+          resPost = res.body[0];
+          return BlogPost.findById(resPost.id);
+        })
+        .then(function(post) {
+          expect(resPost.id).to.equal(post.id);
+          expect(resPost.author).to.equal(post.authorName);
+          expect(resPost.title).to.equal(post.title);
+          expect(resPost.content).to.equal(post.content);
+        });
+    });
   });
 
   describe('GET posts/:id endpoint', function() {
-    it('should return one post by id');
     it('should return the post matching the id given');
   });
 
@@ -67,7 +105,22 @@ describe('BlogPost API Resource', function() {
   });
 
   describe('DELETE /posts/:id endpoint', function() {
-    it('should delete a post by id');
+    it('should delete a post by id', function() {
+      let post;
+
+      return BlogPost.findOne()
+        .then(function(_post) {
+          post = _post;
+          return chai.request(app).delete(`/posts/${post.id}`);
+        })
+        .then(function(res) {
+          expect(res).to.have.status(204);
+          return BlogPost.findById(post.id);
+        })
+        .then(function(_post) {
+          expect(_post).to.be.null;
+        })
+    });
   });
 
   describe('PUT /posts/:id endpoint', function() {
